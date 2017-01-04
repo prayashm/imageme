@@ -11,7 +11,7 @@ what's called.
 """
 
 # Dependencies
-import base64, io, os, re, sys, threading, SimpleHTTPServer, SocketServer
+import base64, io, os, re, sys, threading, http.server, socketserver
 # Attempt to import PIL - if it doesn't exist we won't be able to make use of
 # some performance enhancing goodness, but imageMe will still work fine
 PIL_ENABLED = False
@@ -21,11 +21,11 @@ try:
     PIL_ENABLED = True
     print('Success! Enjoy your supercharged imageMe.')
 except ImportError:
-    print(
+    print((
         'WARNING: \'PIL\' module not found, so you won\'t get all the ' +\
         'performance you could out of imageMe. Install Pillow (' +\
         'https://github.com/python-pillow/Pillow) to enable support.'
-    )
+    ))
 
 # Constants / configuration
 ## Filename of the generated index files
@@ -66,7 +66,7 @@ def _clean_up(paths):
     print('Cleaning up')
     # Iterate over the given paths, unlinking them
     for path in paths:
-        print('Removing %s' % path)
+        print(('Removing %s' % path))
         os.unlink(path)
 
 def _create_index_file(
@@ -168,7 +168,7 @@ def _create_index_file(
     ]
     # Actually create the file, now we've put together the HTML content
     index_file_path = _get_index_file_path(location)
-    print('Creating index file %s' % index_file_path)
+    print(('Creating index file %s' % index_file_path))
     index_file = open(index_file_path, 'w')
     index_file.write('\n'.join(html))
     index_file.close()
@@ -193,7 +193,7 @@ def _create_index_files(root_dir, force_no_processing=False):
     created_files = []
     # Walk the root dir downwards, creating index files as we go
     for here, dirs, files in os.walk(root_dir):
-        print('Processing %s' % here)
+        print(('Processing %s' % here))
         # Sort the subdirectories by name
         dirs = sorted(dirs)
         # Get image files - all files in the directory matching IMAGE_FILE_REGEX
@@ -232,7 +232,7 @@ def _get_image_from_file(dir_path, image_file):
     try:
         img = Image.open(path)
     except IOError as exptn:
-        print('Error loading image file %s: %s' % (path, exptn))
+        print(('Error loading image file %s: %s' % (path, exptn)))
     # Return image or None
     return img
 
@@ -349,7 +349,7 @@ def _get_src_from_image(img, fallback_image_file):
         b64 = base64.b64encode(byte_value)
         return 'data:image/%s;base64,%s' % (target_format.lower(), b64)
     except IOError as exptn:
-        print('IOError while saving image bytes: %s' % exptn)
+        print(('IOError while saving image bytes: %s' % exptn))
         return fallback_image_file
 
 def _get_thumbnail_image_from_file(dir_path, image_file):
@@ -383,9 +383,9 @@ def _get_thumbnail_image_from_file(dir_path, image_file):
     try:
         img.thumbnail((THUMBNAIL_WIDTH, target_height), resample=RESAMPLE)
     except IOError as exptn:
-        print('WARNING: IOError when thumbnailing %s/%s: %s' % (
+        print(('WARNING: IOError when thumbnailing %s/%s: %s' % (
             dir_path, image_file, exptn
-        ))
+        )))
         return None
     # Return the resized image
     return img
@@ -429,18 +429,18 @@ def _run_server():
     # Configure allow_reuse_address to make re-runs of the script less painful -
     # if this is not True then waiting for the address to be freed after the
     # last run can block a subsequent run
-    SocketServer.TCPServer.allow_reuse_address = True
+    socketserver.TCPServer.allow_reuse_address = True
     # Create the server instance
-    server = SocketServer.TCPServer(
+    server = socketserver.TCPServer(
         ('', port),
-        SimpleHTTPServer.SimpleHTTPRequestHandler
+        http.server.SimpleHTTPRequestHandler
     )
     # Print out before actually running the server (cheeky / optimistic, however
     # you want to look at it)
-    print('Your images are at http://127.0.0.1:%d/%s' % (
+    print(('Your images are at http://127.0.0.1:%d/%s' % (
         port,
         INDEX_FILE_NAME
-    ))
+    )))
     # Try to run the server
     try:
         # Run it - this call blocks until the server is killed
